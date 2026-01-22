@@ -27,6 +27,10 @@ public:
     void setPassword(const QString &password);
     QString userName() const;
     QString password() const;
+    
+    // SSL/TLS configuration
+    void setSslCertificateVerification(bool verify);
+    bool sslCertificateVerification() const;
 
 Q_SIGNALS:
     void finished(QFtpNetworkReply *reply);

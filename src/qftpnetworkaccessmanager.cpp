@@ -1,5 +1,6 @@
 #include "QFtpClient/qftpnetworkaccessmanager.h"
 #include "QFtpClient/qftpnetworkreply.h"
+#include "private/qftpnetworkreply_p.h"
 #include <QThread>
 #include <QMutex>
 #include <QMutexLocker>
@@ -10,8 +11,10 @@ class QFtpNetworkAccessManagerPrivate
 public:
     QString userName;
     QString password;
+    bool verifySslCertificate;
     
     QFtpNetworkAccessManagerPrivate()
+        : verifySslCertificate(false)
     {
         curl_global_init(CURL_GLOBAL_ALL);
     }
@@ -19,83 +22,6 @@ public:
     ~QFtpNetworkAccessManagerPrivate()
     {
         curl_global_cleanup();
-    }
-};
-
-class QFtpNetworkReplyPrivate
-{
-public:
-    QUrl url;
-    QFtpNetworkReply::Operation operation;
-    QFtpNetworkReply::NetworkError errorCode;
-    QString errorString;
-    bool finished;
-    bool running;
-    QByteArray buffer;
-    QIODevice *sourceData;
-    CURL *curl;
-    QString userName;
-    QString password;
-    QThread *workerThread;
-    
-    QFtpNetworkReplyPrivate()
-        : operation(QFtpNetworkReply::GetOperation),
-          errorCode(QFtpNetworkReply::NoError),
-          finished(false),
-          running(false),
-          sourceData(nullptr),
-          curl(nullptr),
-          workerThread(nullptr)
-    {
-    }
-    
-    ~QFtpNetworkReplyPrivate()
-    {
-        if (curl) {
-            curl_easy_cleanup(curl);
-        }
-        if (workerThread) {
-            workerThread->quit();
-            workerThread->wait();
-            delete workerThread;
-        }
-    }
-    
-    static size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp)
-    {
-        size_t realsize = size * nmemb;
-        QByteArray *buffer = static_cast<QByteArray*>(userp);
-        buffer->append(static_cast<char*>(contents), realsize);
-        return realsize;
-    }
-    
-    static size_t readCallback(void *ptr, size_t size, size_t nmemb, void *userp)
-    {
-        QIODevice *device = static_cast<QIODevice*>(userp);
-        if (!device || !device->isOpen()) {
-            return 0;
-        }
-        
-        size_t maxBytes = size * nmemb;
-        qint64 bytesRead = device->read(static_cast<char*>(ptr), maxBytes);
-        return bytesRead > 0 ? bytesRead : 0;
-    }
-    
-    static int progressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
-                               curl_off_t ultotal, curl_off_t ulnow)
-    {
-        QFtpNetworkReply *reply = static_cast<QFtpNetworkReply*>(clientp);
-        if (reply) {
-            if (dltotal > 0) {
-                QMetaObject::invokeMethod(reply, "downloadProgress", Qt::QueuedConnection,
-                    Q_ARG(qint64, dlnow), Q_ARG(qint64, dltotal));
-            }
-            if (ultotal > 0) {
-                QMetaObject::invokeMethod(reply, "uploadProgress", Qt::QueuedConnection,
-                    Q_ARG(qint64, ulnow), Q_ARG(qint64, ultotal));
-            }
-        }
-        return 0;
     }
 };
 
@@ -118,6 +44,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
     reply->d_ptr->operation = QFtpNetworkReply::GetOperation;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
+    reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
@@ -142,14 +69,19 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
             // Handle FTPS (use SSL)
             if (rd->url.scheme() == "ftps") {
                 curl_easy_setopt(rd->curl, CURLOPT_USE_SSL, CURLUSESSL_ALL);
-                curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 0L);
-                curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+                if (rd->verifySslCertificate) {
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 1L);
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 2L);
+                } else {
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+                }
             }
             // SFTP is handled automatically by libcurl when scheme is "sftp"
             
-            rd->running = true;
+            rd->running.storeRelaxed(1);
             CURLcode res = curl_easy_perform(rd->curl);
-            rd->running = false;
+            rd->running.storeRelaxed(0);
             rd->finished = true;
             
             if (res != CURLE_OK) {
@@ -177,6 +109,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
     reply->d_ptr->sourceData = data;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
+    reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
@@ -210,9 +143,9 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
                 curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
             }
             
-            rd->running = true;
+            rd->running.storeRelaxed(1);
             CURLcode res = curl_easy_perform(rd->curl);
-            rd->running = false;
+            rd->running.storeRelaxed(0);
             rd->finished = true;
             
             if (res != CURLE_OK) {
@@ -239,6 +172,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
     reply->d_ptr->operation = QFtpNetworkReply::DeleteOperation;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
+    reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
@@ -274,13 +208,18 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
             // Handle FTPS (use SSL)
             if (rd->url.scheme() == "ftps") {
                 curl_easy_setopt(rd->curl, CURLOPT_USE_SSL, CURLUSESSL_ALL);
-                curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 0L);
-                curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+                if (rd->verifySslCertificate) {
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 1L);
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 2L);
+                } else {
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+                }
             }
             
-            rd->running = true;
+            rd->running.storeRelaxed(1);
             CURLcode res = curl_easy_perform(rd->curl);
-            rd->running = false;
+            rd->running.storeRelaxed(0);
             rd->finished = true;
             
             curl_slist_free_all(headerlist);
@@ -322,4 +261,16 @@ QString QFtpNetworkAccessManager::password() const
 {
     Q_D(const QFtpNetworkAccessManager);
     return d->password;
+}
+
+void QFtpNetworkAccessManager::setSslCertificateVerification(bool verify)
+{
+    Q_D(QFtpNetworkAccessManager);
+    d->verifySslCertificate = verify;
+}
+
+bool QFtpNetworkAccessManager::sslCertificateVerification() const
+{
+    Q_D(const QFtpNetworkAccessManager);
+    return d->verifySslCertificate;
 }
