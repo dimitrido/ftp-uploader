@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QNetworkRequest>
+#include <QIODevice>
 
 class QFtpNetworkReply;
 class QFtpNetworkAccessManagerPrivate;

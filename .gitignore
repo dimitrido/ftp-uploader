@@ -50,6 +50,7 @@ build/
 build-*/
 debug/
 release/
+qmake-build/
 
 # CMake
 CMakeCache.txt
