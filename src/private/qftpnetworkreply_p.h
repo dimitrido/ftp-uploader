@@ -40,13 +40,20 @@ public:
     
     ~QFtpNetworkReplyPrivate()
     {
-        if (curl) {
-            curl_easy_cleanup(curl);
+        // Ensure any running operation is stopped before cleanup
+        if (running.loadRelaxed() != 0) {
+            running.storeRelaxed(0);
         }
+        
         if (workerThread) {
             workerThread->quit();
             workerThread->wait();
             delete workerThread;
+        }
+        
+        // Clean up curl handle after thread has finished
+        if (curl) {
+            curl_easy_cleanup(curl);
         }
     }
     

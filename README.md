@@ -112,9 +112,13 @@ if (file->open(QIODevice::ReadOnly)) {
 
 ```cpp
 // Use FTPS (FTP over SSL/TLS)
+manager.setSslCertificateVerification(true); // Enable SSL certificate verification (disabled by default)
 QNetworkRequest secureRequest(QUrl("ftps://secure.example.com/file.txt"));
 QFtpNetworkReply *secureReply = manager.get(secureRequest);
 ```
+
+**Note on SSL Certificate Verification:**
+By default, SSL certificate verification is disabled for FTPS connections to simplify testing. For production use, it's strongly recommended to enable certificate verification using `setSslCertificateVerification(true)` to prevent man-in-the-middle attacks.
 
 ### SFTP Example
 
@@ -155,6 +159,8 @@ Main class for managing FTP operations.
 - `void setPassword(const QString &password)` - Set FTP password
 - `QString userName() const` - Get current username
 - `QString password() const` - Get current password
+- `void setSslCertificateVerification(bool verify)` - Enable/disable SSL certificate verification (default: false)
+- `bool sslCertificateVerification() const` - Get current SSL certificate verification setting
 
 **Signals:**
 - `void finished(QFtpNetworkReply *reply)` - Emitted when an operation finishes
@@ -228,11 +234,14 @@ Contributions are welcome! Please ensure your code follows the existing style an
 ## Troubleshooting
 
 ### SSL Certificate Errors
-By default, SSL certificate verification is disabled for FTPS connections. To enable verification:
+By default, SSL certificate verification is disabled for FTPS connections to ease development and testing. For production deployments:
 ```cpp
-// You'll need to modify the library code to enable certificate verification
-// Look for CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST options
+manager.setSslCertificateVerification(true); // Enable certificate verification
 ```
+If you encounter certificate errors after enabling verification:
+1. Ensure your system's CA certificates are up to date
+2. Verify the server's certificate is valid and trusted
+3. Check that libcurl was compiled with proper SSL support
 
 ### SFTP Authentication
 SFTP typically uses SSH key authentication. Make sure:

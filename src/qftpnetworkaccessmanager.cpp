@@ -139,8 +139,13 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
             // Handle FTPS (use SSL)
             if (rd->url.scheme() == "ftps") {
                 curl_easy_setopt(rd->curl, CURLOPT_USE_SSL, CURLUSESSL_ALL);
-                curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 0L);
-                curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+                if (rd->verifySslCertificate) {
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 1L);
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 2L);
+                } else {
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYPEER, 0L);
+                    curl_easy_setopt(rd->curl, CURLOPT_SSL_VERIFYHOST, 0L);
+                }
             }
             
             rd->running.storeRelaxed(1);
