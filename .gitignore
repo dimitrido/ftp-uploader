@@ -51,6 +51,7 @@ build-*/
 debug/
 release/
 qmake-build/
+_codeql_build_dir/
 
 # CMake
 CMakeCache.txt
