@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     });
     
     QObject::connect(reply, &QFtpNetworkReply::finished, [reply, &app]() {
-        if (reply->error() == QFtpNetworkReply::NoError) {
+        if (reply->error() == QFtpNetworkReply::FtpNoError) {
             QByteArray data = reply->readAll();
             qDebug() << "Download completed successfully!";
             qDebug() << "Downloaded" << data.size() << "bytes";

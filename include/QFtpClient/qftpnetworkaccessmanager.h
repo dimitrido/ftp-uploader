@@ -17,7 +17,7 @@ public:
     explicit QFtpNetworkAccessManager(QObject *parent = nullptr);
     ~QFtpNetworkAccessManager();
 
-    // API similar to QNetworkAccessManager
+    // FTP operations
     QFtpNetworkReply* get(const QNetworkRequest &request);
     QFtpNetworkReply* put(const QNetworkRequest &request, QIODevice *data);
     QFtpNetworkReply* deleteResource(const QNetworkRequest &request);
@@ -36,9 +36,16 @@ Q_SIGNALS:
     void finished(QFtpNetworkReply *reply);
 
 private:
+    // Private implementation pointer
     QFtpNetworkAccessManagerPrivate *d_ptr;
-    Q_DECLARE_PRIVATE(QFtpNetworkAccessManager)
-    Q_DISABLE_COPY(QFtpNetworkAccessManager)
+    
+    // Helper methods for private data access
+    inline QFtpNetworkAccessManagerPrivate* d_func() { return d_ptr; }
+    inline const QFtpNetworkAccessManagerPrivate* d_func() const { return d_ptr; }
+    
+    // Non-copyable
+    QFtpNetworkAccessManager(const QFtpNetworkAccessManager&) = delete;
+    QFtpNetworkAccessManager& operator=(const QFtpNetworkAccessManager&) = delete;
 };
 
 #endif // QFTPNETWORKACCESSMANAGER_H

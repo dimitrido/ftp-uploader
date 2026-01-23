@@ -13,8 +13,8 @@ class QFtpNetworkReplyPrivate
 {
 public:
     QUrl url;
-    QFtpNetworkReply::Operation operation;
-    QFtpNetworkReply::NetworkError errorCode;
+    QFtpNetworkReply::FtpOperation operation;
+    QFtpNetworkReply::FtpError errorCode;
     QString errorString;
     bool finished;
     QAtomicInt running;
@@ -27,8 +27,8 @@ public:
     bool verifySslCertificate;
     
     QFtpNetworkReplyPrivate()
-        : operation(QFtpNetworkReply::GetOperation),
-          errorCode(QFtpNetworkReply::NoError),
+        : operation(QFtpNetworkReply::RetrieveOperation),
+          errorCode(QFtpNetworkReply::FtpNoError),
           finished(false),
           running(0),
           sourceData(nullptr),

@@ -37,11 +37,11 @@ QFtpNetworkAccessManager::~QFtpNetworkAccessManager()
 
 QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
 {
-    Q_D(QFtpNetworkAccessManager);
+    QFtpNetworkAccessManagerPrivate *d = d_func();
     
     QFtpNetworkReply *reply = new QFtpNetworkReply(this);
     reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::GetOperation;
+    reply->d_ptr->operation = QFtpNetworkReply::RetrieveOperation;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
     reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
@@ -85,7 +85,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
             rd->finished = true;
             
             if (res != CURLE_OK) {
-                rd->errorCode = QFtpNetworkReply::ProtocolFailure;
+                rd->errorCode = QFtpNetworkReply::FtpTransferFailed;
                 rd->errorString = QString::fromUtf8(curl_easy_strerror(res));
             }
             
@@ -101,11 +101,11 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
 
 QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, QIODevice *data)
 {
-    Q_D(QFtpNetworkAccessManager);
+    QFtpNetworkAccessManagerPrivate *d = d_func();
     
     QFtpNetworkReply *reply = new QFtpNetworkReply(this);
     reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::PutOperation;
+    reply->d_ptr->operation = QFtpNetworkReply::StoreOperation;
     reply->d_ptr->sourceData = data;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
@@ -154,7 +154,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
             rd->finished = true;
             
             if (res != CURLE_OK) {
-                rd->errorCode = QFtpNetworkReply::ProtocolFailure;
+                rd->errorCode = QFtpNetworkReply::FtpTransferFailed;
                 rd->errorString = QString::fromUtf8(curl_easy_strerror(res));
             }
             
@@ -170,11 +170,11 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
 
 QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest &request)
 {
-    Q_D(QFtpNetworkAccessManager);
+    QFtpNetworkAccessManagerPrivate *d = d_func();
     
     QFtpNetworkReply *reply = new QFtpNetworkReply(this);
     reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::DeleteOperation;
+    reply->d_ptr->operation = QFtpNetworkReply::RemoveOperation;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
     reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
@@ -230,7 +230,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
             curl_slist_free_all(headerlist);
             
             if (res != CURLE_OK) {
-                rd->errorCode = QFtpNetworkReply::ProtocolFailure;
+                rd->errorCode = QFtpNetworkReply::FtpTransferFailed;
                 rd->errorString = QString::fromUtf8(curl_easy_strerror(res));
             }
             
@@ -246,36 +246,36 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
 
 void QFtpNetworkAccessManager::setUserName(const QString &userName)
 {
-    Q_D(QFtpNetworkAccessManager);
+    QFtpNetworkAccessManagerPrivate *d = d_func();
     d->userName = userName;
 }
 
 void QFtpNetworkAccessManager::setPassword(const QString &password)
 {
-    Q_D(QFtpNetworkAccessManager);
+    QFtpNetworkAccessManagerPrivate *d = d_func();
     d->password = password;
 }
 
 QString QFtpNetworkAccessManager::userName() const
 {
-    Q_D(const QFtpNetworkAccessManager);
+    const QFtpNetworkAccessManagerPrivate *d = d_func();
     return d->userName;
 }
 
 QString QFtpNetworkAccessManager::password() const
 {
-    Q_D(const QFtpNetworkAccessManager);
+    const QFtpNetworkAccessManagerPrivate *d = d_func();
     return d->password;
 }
 
 void QFtpNetworkAccessManager::setSslCertificateVerification(bool verify)
 {
-    Q_D(QFtpNetworkAccessManager);
+    QFtpNetworkAccessManagerPrivate *d = d_func();
     d->verifySslCertificate = verify;
 }
 
 bool QFtpNetworkAccessManager::sslCertificateVerification() const
 {
-    Q_D(const QFtpNetworkAccessManager);
+    const QFtpNetworkAccessManagerPrivate *d = d_func();
     return d->verifySslCertificate;
 }

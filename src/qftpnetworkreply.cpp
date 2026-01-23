@@ -15,43 +15,43 @@ QFtpNetworkReply::~QFtpNetworkReply()
 
 QUrl QFtpNetworkReply::url() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->url;
 }
 
-QFtpNetworkReply::Operation QFtpNetworkReply::operation() const
+QFtpNetworkReply::FtpOperation QFtpNetworkReply::operation() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->operation;
 }
 
-QFtpNetworkReply::NetworkError QFtpNetworkReply::error() const
+QFtpNetworkReply::FtpError QFtpNetworkReply::error() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->errorCode;
 }
 
 QString QFtpNetworkReply::errorString() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->errorString;
 }
 
 bool QFtpNetworkReply::isFinished() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->finished;
 }
 
 bool QFtpNetworkReply::isRunning() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->running.loadRelaxed() != 0;
 }
 
 QByteArray QFtpNetworkReply::readAll()
 {
-    Q_D(QFtpNetworkReply);
+    QFtpNetworkReplyPrivate *d = d_func();
     QByteArray data = d->buffer;
     d->buffer.clear();
     return data;
@@ -59,13 +59,13 @@ QByteArray QFtpNetworkReply::readAll()
 
 qint64 QFtpNetworkReply::bytesAvailable() const
 {
-    Q_D(const QFtpNetworkReply);
+    const QFtpNetworkReplyPrivate *d = d_func();
     return d->buffer.size();
 }
 
 void QFtpNetworkReply::abort()
 {
-    Q_D(QFtpNetworkReply);
+    QFtpNetworkReplyPrivate *d = d_func();
     if (d->curl) {
         // Set running to false to signal the progress callback to abort
         d->running.storeRelaxed(0);
