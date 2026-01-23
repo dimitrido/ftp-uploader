@@ -43,6 +43,7 @@ public:
         StoreOperation,
         RemoveOperation
     };
+    Q_ENUM(FtpOperation)
 
     ~QFtpNetworkReply();
 
