@@ -13,41 +13,43 @@ class QFtpNetworkReply : public QObject
     Q_OBJECT
 
 public:
-    enum NetworkError {
-        NoError = 0,
-        ConnectionRefusedError,
-        RemoteHostClosedError,
-        HostNotFoundError,
-        TimeoutError,
-        OperationCanceledError,
-        SslHandshakeFailedError,
-        TemporaryNetworkFailureError,
-        NetworkSessionFailedError,
-        BackgroundRequestNotAllowedError,
-        UnknownNetworkError = 99,
+    // FTP-specific error codes
+    enum FtpError {
+        FtpNoError = 0,
+        FtpConnectionFailed,
+        FtpConnectionClosed,
+        FtpHostUnavailable,
+        FtpTimeout,
+        FtpOperationAborted,
+        FtpSslError,
+        FtpNetworkFailure,
+        FtpSessionError,
+        FtpRequestBlocked,
+        FtpUnknownError = 99,
         
-        // Protocol errors
-        ProtocolUnknownError = 301,
-        ProtocolInvalidOperationError,
-        AuthenticationRequiredError = 401,
-        ContentAccessDenied = 403,
-        ContentNotFoundError = 404,
-        ContentOperationNotPermittedError = 405,
-        ProtocolFailure = 499
+        // FTP protocol errors
+        FtpProtocolError = 301,
+        FtpInvalidOperation,
+        FtpAuthenticationFailed = 401,
+        FtpAccessDenied = 403,
+        FtpResourceNotFound = 404,
+        FtpOperationNotAllowed = 405,
+        FtpTransferFailed = 499
     };
-    Q_ENUM(NetworkError)
+    Q_ENUM(FtpError)
 
-    enum Operation {
-        GetOperation,
-        PutOperation,
-        DeleteOperation
+    enum FtpOperation {
+        RetrieveOperation,
+        StoreOperation,
+        RemoveOperation
     };
+    Q_ENUM(FtpOperation)
 
     ~QFtpNetworkReply();
 
     QUrl url() const;
-    Operation operation() const;
-    NetworkError error() const;
+    FtpOperation operation() const;
+    FtpError error() const;
     QString errorString() const;
     bool isFinished() const;
     bool isRunning() const;
@@ -58,19 +60,27 @@ public:
 
 Q_SIGNALS:
     void finished();
-    void error(QFtpNetworkReply::NetworkError code);
+    void error(QFtpNetworkReply::FtpError code);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
 
 private:
     friend class QFtpNetworkAccessManager;
     friend class QFtpNetworkAccessManagerPrivate;
+    friend class QFtpNetworkReplyPrivate;
     
     explicit QFtpNetworkReply(QObject *parent = nullptr);
     
+    // Private implementation pointer
     QFtpNetworkReplyPrivate *d_ptr;
-    Q_DECLARE_PRIVATE(QFtpNetworkReply)
-    Q_DISABLE_COPY(QFtpNetworkReply)
+    
+    // Helper methods for private data access
+    inline QFtpNetworkReplyPrivate* d_func() { return d_ptr; }
+    inline const QFtpNetworkReplyPrivate* d_func() const { return d_ptr; }
+    
+    // Non-copyable
+    QFtpNetworkReply(const QFtpNetworkReply&) = delete;
+    QFtpNetworkReply& operator=(const QFtpNetworkReply&) = delete;
 };
 
 #endif // QFTPNETWORKREPLY_H

@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     QFtpNetworkReply *reply = manager.get(request);
     
     QObject::connect(reply, &QFtpNetworkReply::finished, [reply]() {
-        if (reply->error() == QFtpNetworkReply::NoError) {
+        if (reply->error() == QFtpNetworkReply::FtpNoError) {
             QByteArray data = reply->readAll();
             qDebug() << "Downloaded" << data.size() << "bytes";
         } else {
@@ -96,7 +96,7 @@ if (file->open(QIODevice::ReadOnly)) {
     });
     
     QObject::connect(uploadReply, &QFtpNetworkReply::finished, [uploadReply, file]() {
-        if (uploadReply->error() == QFtpNetworkReply::NoError) {
+        if (uploadReply->error() == QFtpNetworkReply::FtpNoError) {
             qDebug() << "Upload completed!";
         } else {
             qDebug() << "Upload failed:" << uploadReply->errorString();
@@ -136,7 +136,7 @@ QNetworkRequest deleteRequest(QUrl("ftp://ftp.example.com/file_to_delete.txt"));
 QFtpNetworkReply *deleteReply = manager.deleteResource(deleteRequest);
 
 QObject::connect(deleteReply, &QFtpNetworkReply::finished, [deleteReply]() {
-    if (deleteReply->error() == QFtpNetworkReply::NoError) {
+    if (deleteReply->error() == QFtpNetworkReply::FtpNoError) {
         qDebug() << "File deleted successfully!";
     } else {
         qDebug() << "Delete failed:" << deleteReply->errorString();
@@ -171,8 +171,8 @@ Represents an ongoing or completed FTP operation.
 
 **Methods:**
 - `QUrl url() const` - Get the URL of the request
-- `Operation operation() const` - Get the operation type (Get, Put, Delete)
-- `NetworkError error() const` - Get error code
+- `FtpOperation operation() const` - Get the operation type (Retrieve, Store, Remove)
+- `FtpError error() const` - Get error code
 - `QString errorString() const` - Get error description
 - `bool isFinished() const` - Check if operation is finished
 - `bool isRunning() const` - Check if operation is running
@@ -182,7 +182,7 @@ Represents an ongoing or completed FTP operation.
 
 **Signals:**
 - `void finished()` - Emitted when operation completes
-- `void error(QFtpNetworkReply::NetworkError code)` - Emitted on error
+- `void error(QFtpNetworkReply::FtpError code)` - Emitted on error
 - `void downloadProgress(qint64 bytesReceived, qint64 bytesTotal)` - Download progress
 - `void uploadProgress(qint64 bytesSent, qint64 bytesTotal)` - Upload progress
 
