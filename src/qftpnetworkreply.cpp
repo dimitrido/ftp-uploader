@@ -2,72 +2,61 @@
 #include "private/qftpnetworkreply_p.h"
 
 QFtpNetworkReply::QFtpNetworkReply(QObject *parent)
-    : QObject(parent), d_ptr(new QFtpNetworkReplyPrivate())
+    : QObject(parent), m_impl(new QFtpNetworkReplyPrivate())
 {
 }
 
 QFtpNetworkReply::~QFtpNetworkReply()
 {
-    if (d_ptr) {
-        delete d_ptr;
-    }
+    // unique_ptr automatically cleans up
 }
 
 QUrl QFtpNetworkReply::url() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->url;
+    return m_impl->url;
 }
 
 QFtpNetworkReply::FtpOperation QFtpNetworkReply::operation() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->operation;
+    return m_impl->operation;
 }
 
 QFtpNetworkReply::FtpError QFtpNetworkReply::error() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->errorCode;
+    return m_impl->errorCode;
 }
 
 QString QFtpNetworkReply::errorString() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->errorString;
+    return m_impl->errorString;
 }
 
 bool QFtpNetworkReply::isFinished() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->finished;
+    return m_impl->finished;
 }
 
 bool QFtpNetworkReply::isRunning() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->running.loadRelaxed() != 0;
+    return m_impl->running.loadRelaxed() != 0;
 }
 
 QByteArray QFtpNetworkReply::readAll()
 {
-    QFtpNetworkReplyPrivate *d = d_func();
-    QByteArray data = d->buffer;
-    d->buffer.clear();
+    QByteArray data = m_impl->buffer;
+    m_impl->buffer.clear();
     return data;
 }
 
 qint64 QFtpNetworkReply::bytesAvailable() const
 {
-    const QFtpNetworkReplyPrivate *d = d_func();
-    return d->buffer.size();
+    return m_impl->buffer.size();
 }
 
 void QFtpNetworkReply::abort()
 {
-    QFtpNetworkReplyPrivate *d = d_func();
-    if (d->curl) {
+    if (m_impl->curl) {
         // Set running to false to signal the progress callback to abort
-        d->running.storeRelaxed(0);
+        m_impl->running.storeRelaxed(0);
     }
 }

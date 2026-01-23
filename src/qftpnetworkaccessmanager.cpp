@@ -26,29 +26,27 @@ public:
 };
 
 QFtpNetworkAccessManager::QFtpNetworkAccessManager(QObject *parent)
-    : QObject(parent), d_ptr(new QFtpNetworkAccessManagerPrivate())
+    : QObject(parent), m_impl(new QFtpNetworkAccessManagerPrivate())
 {
 }
 
 QFtpNetworkAccessManager::~QFtpNetworkAccessManager()
 {
-    delete d_ptr;
+    // unique_ptr automatically cleans up
 }
 
 QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
 {
-    QFtpNetworkAccessManagerPrivate *d = d_func();
-    
     QFtpNetworkReply *reply = new QFtpNetworkReply(this);
-    reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::RetrieveOperation;
-    reply->d_ptr->userName = d->userName;
-    reply->d_ptr->password = d->password;
-    reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
+    reply->m_impl->url = request.url();
+    reply->m_impl->operation = QFtpNetworkReply::RetrieveOperation;
+    reply->m_impl->userName = m_impl->userName;
+    reply->m_impl->password = m_impl->password;
+    reply->m_impl->verifySslCertificate = m_impl->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
-        QFtpNetworkReplyPrivate *rd = reply->d_ptr;
+        QFtpNetworkReplyPrivate *rd = reply->m_impl.get();
         rd->curl = curl_easy_init();
         
         if (rd->curl) {
@@ -93,7 +91,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
         }
     });
     
-    reply->d_ptr->workerThread = thread;
+    reply->m_impl->workerThread = thread;
     thread->start();
     
     return reply;
@@ -101,19 +99,17 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
 
 QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, QIODevice *data)
 {
-    QFtpNetworkAccessManagerPrivate *d = d_func();
-    
     QFtpNetworkReply *reply = new QFtpNetworkReply(this);
-    reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::StoreOperation;
-    reply->d_ptr->sourceData = data;
-    reply->d_ptr->userName = d->userName;
-    reply->d_ptr->password = d->password;
-    reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
+    reply->m_impl->url = request.url();
+    reply->m_impl->operation = QFtpNetworkReply::StoreOperation;
+    reply->m_impl->sourceData = data;
+    reply->m_impl->userName = m_impl->userName;
+    reply->m_impl->password = m_impl->password;
+    reply->m_impl->verifySslCertificate = m_impl->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
-        QFtpNetworkReplyPrivate *rd = reply->d_ptr;
+        QFtpNetworkReplyPrivate *rd = reply->m_impl.get();
         rd->curl = curl_easy_init();
         
         if (rd->curl) {
@@ -162,7 +158,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
         }
     });
     
-    reply->d_ptr->workerThread = thread;
+    reply->m_impl->workerThread = thread;
     thread->start();
     
     return reply;
@@ -170,18 +166,16 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
 
 QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest &request)
 {
-    QFtpNetworkAccessManagerPrivate *d = d_func();
-    
     QFtpNetworkReply *reply = new QFtpNetworkReply(this);
-    reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::RemoveOperation;
-    reply->d_ptr->userName = d->userName;
-    reply->d_ptr->password = d->password;
-    reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
+    reply->m_impl->url = request.url();
+    reply->m_impl->operation = QFtpNetworkReply::RemoveOperation;
+    reply->m_impl->userName = m_impl->userName;
+    reply->m_impl->password = m_impl->password;
+    reply->m_impl->verifySslCertificate = m_impl->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
-        QFtpNetworkReplyPrivate *rd = reply->d_ptr;
+        QFtpNetworkReplyPrivate *rd = reply->m_impl.get();
         rd->curl = curl_easy_init();
         
         if (rd->curl) {
@@ -238,7 +232,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
         }
     });
     
-    reply->d_ptr->workerThread = thread;
+    reply->m_impl->workerThread = thread;
     thread->start();
     
     return reply;
@@ -246,36 +240,30 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
 
 void QFtpNetworkAccessManager::setUserName(const QString &userName)
 {
-    QFtpNetworkAccessManagerPrivate *d = d_func();
-    d->userName = userName;
+    m_impl->userName = userName;
 }
 
 void QFtpNetworkAccessManager::setPassword(const QString &password)
 {
-    QFtpNetworkAccessManagerPrivate *d = d_func();
-    d->password = password;
+    m_impl->password = password;
 }
 
 QString QFtpNetworkAccessManager::userName() const
 {
-    const QFtpNetworkAccessManagerPrivate *d = d_func();
-    return d->userName;
+    return m_impl->userName;
 }
 
 QString QFtpNetworkAccessManager::password() const
 {
-    const QFtpNetworkAccessManagerPrivate *d = d_func();
-    return d->password;
+    return m_impl->password;
 }
 
 void QFtpNetworkAccessManager::setSslCertificateVerification(bool verify)
 {
-    QFtpNetworkAccessManagerPrivate *d = d_func();
-    d->verifySslCertificate = verify;
+    m_impl->verifySslCertificate = verify;
 }
 
 bool QFtpNetworkAccessManager::sslCertificateVerification() const
 {
-    const QFtpNetworkAccessManagerPrivate *d = d_func();
-    return d->verifySslCertificate;
+    return m_impl->verifySslCertificate;
 }

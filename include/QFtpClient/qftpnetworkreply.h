@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QByteArray>
 #include <QNetworkRequest>
+#include <memory>
 
 class QFtpNetworkReplyPrivate;
 
@@ -71,12 +72,8 @@ private:
     
     explicit QFtpNetworkReply(QObject *parent = nullptr);
     
-    // Private implementation pointer
-    QFtpNetworkReplyPrivate *d_ptr;
-    
-    // Helper methods for private data access
-    inline QFtpNetworkReplyPrivate* d_func() { return d_ptr; }
-    inline const QFtpNetworkReplyPrivate* d_func() const { return d_ptr; }
+    // Implementation using unique_ptr for automatic memory management
+    std::unique_ptr<QFtpNetworkReplyPrivate> m_impl;
     
     // Non-copyable
     QFtpNetworkReply(const QFtpNetworkReply&) = delete;

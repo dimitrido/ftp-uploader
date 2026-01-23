@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QIODevice>
+#include <memory>
 
 class QFtpNetworkReply;
 class QFtpNetworkAccessManagerPrivate;
@@ -36,12 +37,8 @@ Q_SIGNALS:
     void finished(QFtpNetworkReply *reply);
 
 private:
-    // Private implementation pointer
-    QFtpNetworkAccessManagerPrivate *d_ptr;
-    
-    // Helper methods for private data access
-    inline QFtpNetworkAccessManagerPrivate* d_func() { return d_ptr; }
-    inline const QFtpNetworkAccessManagerPrivate* d_func() const { return d_ptr; }
+    // Implementation using unique_ptr for automatic memory management
+    std::unique_ptr<QFtpNetworkAccessManagerPrivate> m_impl;
     
     // Non-copyable
     QFtpNetworkAccessManager(const QFtpNetworkAccessManager&) = delete;

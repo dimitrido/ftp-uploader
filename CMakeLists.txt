@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(QFtpClient VERSION 1.0.0 LANGUAGES CXX)
 
+# Enable testing at the project level
+enable_testing()
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -99,4 +102,10 @@ install(FILES
 option(BUILD_EXAMPLES "Build examples" ON)
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+# Build tests (optional)
+option(BUILD_TESTS "Build tests" ON)
+if(BUILD_TESTS)
+    add_subdirectory(tests)
 endif()

@@ -81,9 +81,9 @@ public:
                                curl_off_t ultotal, curl_off_t ulnow)
     {
         QFtpNetworkReply *reply = static_cast<QFtpNetworkReply*>(clientp);
-        if (reply) {
+        if (reply && reply->m_impl) {
             // Check if operation was aborted
-            if (reply->d_ptr && !reply->d_ptr->running.loadRelaxed()) {
+            if (!reply->m_impl->running.loadRelaxed()) {
                 return 1; // Return non-zero to abort the transfer
             }
             
