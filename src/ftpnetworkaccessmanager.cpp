@@ -1,62 +1,62 @@
-#include "QFtpClient/qftpnetworkaccessmanager.h"
-#include "QFtpClient/qftpnetworkreply.h"
-#include "private/qftpnetworkreply_p.h"
+#include "FtpClient/ftpnetworkaccessmanager.h"
+#include "FtpClient/ftpnetworkreply.h"
+#include "private/ftpnetworkreply_p.h"
 #include <QThread>
 #include <QMutex>
 #include <QMutexLocker>
 #include <curl/curl.h>
 
-class QFtpNetworkAccessManagerPrivate
+class FtpNetworkAccessManagerPrivate
 {
 public:
     QString userName;
     QString password;
     bool verifySslCertificate;
     
-    QFtpNetworkAccessManagerPrivate()
+    FtpNetworkAccessManagerPrivate()
         : verifySslCertificate(false)
     {
         curl_global_init(CURL_GLOBAL_ALL);
     }
     
-    ~QFtpNetworkAccessManagerPrivate()
+    ~FtpNetworkAccessManagerPrivate()
     {
         curl_global_cleanup();
     }
 };
 
-QFtpNetworkAccessManager::QFtpNetworkAccessManager(QObject *parent)
-    : QObject(parent), d_ptr(new QFtpNetworkAccessManagerPrivate())
+FtpNetworkAccessManager::FtpNetworkAccessManager(QObject *parent)
+    : QObject(parent), d_ptr(new FtpNetworkAccessManagerPrivate())
 {
 }
 
-QFtpNetworkAccessManager::~QFtpNetworkAccessManager()
+FtpNetworkAccessManager::~FtpNetworkAccessManager()
 {
     delete d_ptr;
 }
 
-QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
+FtpNetworkReply* FtpNetworkAccessManager::get(const QNetworkRequest &request)
 {
-    Q_D(QFtpNetworkAccessManager);
+    Q_D(FtpNetworkAccessManager);
     
-    QFtpNetworkReply *reply = new QFtpNetworkReply(this);
+    FtpNetworkReply *reply = new FtpNetworkReply(this);
     reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::GetOperation;
+    reply->d_ptr->operation = FtpNetworkReply::GetOperation;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
     reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
-        QFtpNetworkReplyPrivate *rd = reply->d_ptr;
+        FtpNetworkReplyPrivate *rd = reply->d_ptr;
         rd->curl = curl_easy_init();
         
         if (rd->curl) {
             QString urlStr = rd->url.toString();
             curl_easy_setopt(rd->curl, CURLOPT_URL, urlStr.toUtf8().constData());
-            curl_easy_setopt(rd->curl, CURLOPT_WRITEFUNCTION, QFtpNetworkReplyPrivate::writeCallback);
+            curl_easy_setopt(rd->curl, CURLOPT_WRITEFUNCTION, FtpNetworkReplyPrivate::writeCallback);
             curl_easy_setopt(rd->curl, CURLOPT_WRITEDATA, &rd->buffer);
-            curl_easy_setopt(rd->curl, CURLOPT_XFERINFOFUNCTION, QFtpNetworkReplyPrivate::progressCallback);
+            curl_easy_setopt(rd->curl, CURLOPT_XFERINFOFUNCTION, FtpNetworkReplyPrivate::progressCallback);
             curl_easy_setopt(rd->curl, CURLOPT_XFERINFODATA, reply);
             curl_easy_setopt(rd->curl, CURLOPT_NOPROGRESS, 0L);
             
@@ -85,7 +85,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
             rd->finished = true;
             
             if (res != CURLE_OK) {
-                rd->errorCode = QFtpNetworkReply::ProtocolFailure;
+                rd->errorCode = FtpNetworkReply::ProtocolFailure;
                 rd->errorString = QString::fromUtf8(curl_easy_strerror(res));
             }
             
@@ -99,13 +99,13 @@ QFtpNetworkReply* QFtpNetworkAccessManager::get(const QNetworkRequest &request)
     return reply;
 }
 
-QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, QIODevice *data)
+FtpNetworkReply* FtpNetworkAccessManager::put(const QNetworkRequest &request, QIODevice *data)
 {
-    Q_D(QFtpNetworkAccessManager);
+    Q_D(FtpNetworkAccessManager);
     
-    QFtpNetworkReply *reply = new QFtpNetworkReply(this);
+    FtpNetworkReply *reply = new FtpNetworkReply(this);
     reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::PutOperation;
+    reply->d_ptr->operation = FtpNetworkReply::PutOperation;
     reply->d_ptr->sourceData = data;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
@@ -113,16 +113,16 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
-        QFtpNetworkReplyPrivate *rd = reply->d_ptr;
+        FtpNetworkReplyPrivate *rd = reply->d_ptr;
         rd->curl = curl_easy_init();
         
         if (rd->curl) {
             QString urlStr = rd->url.toString();
             curl_easy_setopt(rd->curl, CURLOPT_URL, urlStr.toUtf8().constData());
             curl_easy_setopt(rd->curl, CURLOPT_UPLOAD, 1L);
-            curl_easy_setopt(rd->curl, CURLOPT_READFUNCTION, QFtpNetworkReplyPrivate::readCallback);
+            curl_easy_setopt(rd->curl, CURLOPT_READFUNCTION, FtpNetworkReplyPrivate::readCallback);
             curl_easy_setopt(rd->curl, CURLOPT_READDATA, rd->sourceData);
-            curl_easy_setopt(rd->curl, CURLOPT_XFERINFOFUNCTION, QFtpNetworkReplyPrivate::progressCallback);
+            curl_easy_setopt(rd->curl, CURLOPT_XFERINFOFUNCTION, FtpNetworkReplyPrivate::progressCallback);
             curl_easy_setopt(rd->curl, CURLOPT_XFERINFODATA, reply);
             curl_easy_setopt(rd->curl, CURLOPT_NOPROGRESS, 0L);
             
@@ -154,7 +154,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
             rd->finished = true;
             
             if (res != CURLE_OK) {
-                rd->errorCode = QFtpNetworkReply::ProtocolFailure;
+                rd->errorCode = FtpNetworkReply::ProtocolFailure;
                 rd->errorString = QString::fromUtf8(curl_easy_strerror(res));
             }
             
@@ -168,20 +168,20 @@ QFtpNetworkReply* QFtpNetworkAccessManager::put(const QNetworkRequest &request, 
     return reply;
 }
 
-QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest &request)
+FtpNetworkReply* FtpNetworkAccessManager::deleteResource(const QNetworkRequest &request)
 {
-    Q_D(QFtpNetworkAccessManager);
+    Q_D(FtpNetworkAccessManager);
     
-    QFtpNetworkReply *reply = new QFtpNetworkReply(this);
+    FtpNetworkReply *reply = new FtpNetworkReply(this);
     reply->d_ptr->url = request.url();
-    reply->d_ptr->operation = QFtpNetworkReply::DeleteOperation;
+    reply->d_ptr->operation = FtpNetworkReply::DeleteOperation;
     reply->d_ptr->userName = d->userName;
     reply->d_ptr->password = d->password;
     reply->d_ptr->verifySslCertificate = d->verifySslCertificate;
     
     // Perform operation in a separate thread
     QThread *thread = QThread::create([reply]() {
-        QFtpNetworkReplyPrivate *rd = reply->d_ptr;
+        FtpNetworkReplyPrivate *rd = reply->d_ptr;
         rd->curl = curl_easy_init();
         
         if (rd->curl) {
@@ -230,7 +230,7 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
             curl_slist_free_all(headerlist);
             
             if (res != CURLE_OK) {
-                rd->errorCode = QFtpNetworkReply::ProtocolFailure;
+                rd->errorCode = FtpNetworkReply::ProtocolFailure;
                 rd->errorString = QString::fromUtf8(curl_easy_strerror(res));
             }
             
@@ -244,38 +244,38 @@ QFtpNetworkReply* QFtpNetworkAccessManager::deleteResource(const QNetworkRequest
     return reply;
 }
 
-void QFtpNetworkAccessManager::setUserName(const QString &userName)
+void FtpNetworkAccessManager::setUserName(const QString &userName)
 {
-    Q_D(QFtpNetworkAccessManager);
+    Q_D(FtpNetworkAccessManager);
     d->userName = userName;
 }
 
-void QFtpNetworkAccessManager::setPassword(const QString &password)
+void FtpNetworkAccessManager::setPassword(const QString &password)
 {
-    Q_D(QFtpNetworkAccessManager);
+    Q_D(FtpNetworkAccessManager);
     d->password = password;
 }
 
-QString QFtpNetworkAccessManager::userName() const
+QString FtpNetworkAccessManager::userName() const
 {
-    Q_D(const QFtpNetworkAccessManager);
+    Q_D(const FtpNetworkAccessManager);
     return d->userName;
 }
 
-QString QFtpNetworkAccessManager::password() const
+QString FtpNetworkAccessManager::password() const
 {
-    Q_D(const QFtpNetworkAccessManager);
+    Q_D(const FtpNetworkAccessManager);
     return d->password;
 }
 
-void QFtpNetworkAccessManager::setSslCertificateVerification(bool verify)
+void FtpNetworkAccessManager::setSslCertificateVerification(bool verify)
 {
-    Q_D(QFtpNetworkAccessManager);
+    Q_D(FtpNetworkAccessManager);
     d->verifySslCertificate = verify;
 }
 
-bool QFtpNetworkAccessManager::sslCertificateVerification() const
+bool FtpNetworkAccessManager::sslCertificateVerification() const
 {
-    Q_D(const QFtpNetworkAccessManager);
+    Q_D(const FtpNetworkAccessManager);
     return d->verifySslCertificate;
 }

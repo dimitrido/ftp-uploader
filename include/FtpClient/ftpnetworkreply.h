@@ -1,14 +1,14 @@
-#ifndef QFTPNETWORKREPLY_H
-#define QFTPNETWORKREPLY_H
+#ifndef FtpNetworkReply_H
+#define FtpNetworkReply_H
 
 #include <QObject>
 #include <QUrl>
 #include <QByteArray>
 #include <QNetworkRequest>
 
-class QFtpNetworkReplyPrivate;
+class FtpNetworkReplyPrivate;
 
-class QFtpNetworkReply : public QObject
+class FtpNetworkReply : public QObject
 {
     Q_OBJECT
 
@@ -43,7 +43,7 @@ public:
         DeleteOperation
     };
 
-    ~QFtpNetworkReply();
+    ~FtpNetworkReply();
 
     QUrl url() const;
     Operation operation() const;
@@ -58,19 +58,19 @@ public:
 
 Q_SIGNALS:
     void finished();
-    void error(QFtpNetworkReply::NetworkError code);
+    void error(FtpNetworkReply::NetworkError code);
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
     void uploadProgress(qint64 bytesSent, qint64 bytesTotal);
 
 private:
-    friend class QFtpNetworkAccessManager;
-    friend class QFtpNetworkAccessManagerPrivate;
+    friend class FtpNetworkAccessManager;
+    friend class FtpNetworkAccessManagerPrivate;
     
-    explicit QFtpNetworkReply(QObject *parent = nullptr);
+    explicit FtpNetworkReply(QObject *parent = nullptr);
     
-    QFtpNetworkReplyPrivate *d_ptr;
-    Q_DECLARE_PRIVATE(QFtpNetworkReply)
-    Q_DISABLE_COPY(QFtpNetworkReply)
+    FtpNetworkReplyPrivate *d_ptr;
+    Q_DECLARE_PRIVATE(FtpNetworkReply)
+    Q_DISABLE_COPY(FtpNetworkReply)
 };
 
-#endif // QFTPNETWORKREPLY_H
+#endif // FtpNetworkReply_H

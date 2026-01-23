@@ -1,7 +1,0 @@
-#ifndef QFTPCLIENT_H
-#define QFTPCLIENT_H
-
-#include "qftpnetworkaccessmanager.h"
-#include "qftpnetworkreply.h"
-
-#endif // QFTPCLIENT_H

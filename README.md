@@ -4,7 +4,7 @@ A modern C++ FTP client library with Qt API, based on libcurl.
 
 ## Features
 
-- **Qt-style API**: API design similar to QNetworkAccessManager for familiar usage
+- **Qt-style API**: API design similar to NetworkAccessManager for familiar usage
 - **Multiple Protocol Support**: 
   - FTP (File Transfer Protocol)
   - FTPS (FTP over SSL/TLS)
@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
     
     // Download a file
     QNetworkRequest request(QUrl("ftp://ftp.example.com/file.txt"));
-    QFtpNetworkReply *reply = manager.get(request);
+    FtpNetworkReply *reply = manager.get(request);
     
-    QObject::connect(reply, &QFtpNetworkReply::finished, [reply]() {
-        if (reply->error() == QFtpNetworkReply::NoError) {
+    QObject::connect(reply, &FtpNetworkReply::finished, [reply]() {
+        if (reply->error() == FtpNetworkReply::NoError) {
             QByteArray data = reply->readAll();
             qDebug() << "Downloaded" << data.size() << "bytes";
         } else {
@@ -88,15 +88,15 @@ int main(int argc, char *argv[])
 QFile *file = new QFile("local_file.txt");
 if (file->open(QIODevice::ReadOnly)) {
     QNetworkRequest uploadRequest(QUrl("ftp://ftp.example.com/remote_file.txt"));
-    QFtpNetworkReply *uploadReply = manager.put(uploadRequest, file);
+    FtpNetworkReply *uploadReply = manager.put(uploadRequest, file);
     
-    QObject::connect(uploadReply, &QFtpNetworkReply::uploadProgress, 
+    QObject::connect(uploadReply, &FtpNetworkReply::uploadProgress, 
                      [](qint64 bytesSent, qint64 bytesTotal) {
         qDebug() << "Upload progress:" << bytesSent << "/" << bytesTotal;
     });
     
-    QObject::connect(uploadReply, &QFtpNetworkReply::finished, [uploadReply, file]() {
-        if (uploadReply->error() == QFtpNetworkReply::NoError) {
+    QObject::connect(uploadReply, &FtpNetworkReply::finished, [uploadReply, file]() {
+        if (uploadReply->error() == FtpNetworkReply::NoError) {
             qDebug() << "Upload completed!";
         } else {
             qDebug() << "Upload failed:" << uploadReply->errorString();
@@ -114,7 +114,7 @@ if (file->open(QIODevice::ReadOnly)) {
 // Use FTPS (FTP over SSL/TLS)
 manager.setSslCertificateVerification(true); // Enable SSL certificate verification (disabled by default)
 QNetworkRequest secureRequest(QUrl("ftps://secure.example.com/file.txt"));
-QFtpNetworkReply *secureReply = manager.get(secureRequest);
+FtpNetworkReply *secureReply = manager.get(secureRequest);
 ```
 
 **Note on SSL Certificate Verification:**
@@ -125,7 +125,7 @@ By default, SSL certificate verification is disabled for FTPS connections to sim
 ```cpp
 // Use SFTP (SSH File Transfer Protocol)
 QNetworkRequest sftpRequest(QUrl("sftp://ssh.example.com/file.txt"));
-QFtpNetworkReply *sftpReply = manager.get(sftpRequest);
+FtpNetworkReply *sftpReply = manager.get(sftpRequest);
 ```
 
 ### Delete File Example
@@ -133,10 +133,10 @@ QFtpNetworkReply *sftpReply = manager.get(sftpRequest);
 ```cpp
 // Delete a file
 QNetworkRequest deleteRequest(QUrl("ftp://ftp.example.com/file_to_delete.txt"));
-QFtpNetworkReply *deleteReply = manager.deleteResource(deleteRequest);
+FtpNetworkReply *deleteReply = manager.deleteResource(deleteRequest);
 
-QObject::connect(deleteReply, &QFtpNetworkReply::finished, [deleteReply]() {
-    if (deleteReply->error() == QFtpNetworkReply::NoError) {
+QObject::connect(deleteReply, &FtpNetworkReply::finished, [deleteReply]() {
+    if (deleteReply->error() == FtpNetworkReply::NoError) {
         qDebug() << "File deleted successfully!";
     } else {
         qDebug() << "Delete failed:" << deleteReply->errorString();
@@ -152,9 +152,9 @@ QObject::connect(deleteReply, &QFtpNetworkReply::finished, [deleteReply]() {
 Main class for managing FTP operations.
 
 **Methods:**
-- `QFtpNetworkReply* get(const QNetworkRequest &request)` - Download a file
-- `QFtpNetworkReply* put(const QNetworkRequest &request, QIODevice *data)` - Upload a file
-- `QFtpNetworkReply* deleteResource(const QNetworkRequest &request)` - Delete a file
+- `FtpNetworkReply* get(const QNetworkRequest &request)` - Download a file
+- `FtpNetworkReply* put(const QNetworkRequest &request, QIODevice *data)` - Upload a file
+- `FtpNetworkReply* deleteResource(const QNetworkRequest &request)` - Delete a file
 - `void setUserName(const QString &userName)` - Set FTP username
 - `void setPassword(const QString &password)` - Set FTP password
 - `QString userName() const` - Get current username
@@ -163,9 +163,9 @@ Main class for managing FTP operations.
 - `bool sslCertificateVerification() const` - Get current SSL certificate verification setting
 
 **Signals:**
-- `void finished(QFtpNetworkReply *reply)` - Emitted when an operation finishes
+- `void finished(FtpNetworkReply *reply)` - Emitted when an operation finishes
 
-### QFtpNetworkReply
+### FtpNetworkReply
 
 Represents an ongoing or completed FTP operation.
 
@@ -182,7 +182,7 @@ Represents an ongoing or completed FTP operation.
 
 **Signals:**
 - `void finished()` - Emitted when operation completes
-- `void error(QFtpNetworkReply::NetworkError code)` - Emitted on error
+- `void error(FtpNetworkReply::NetworkError code)` - Emitted on error
 - `void downloadProgress(qint64 bytesReceived, qint64 bytesTotal)` - Download progress
 - `void uploadProgress(qint64 bytesSent, qint64 bytesTotal)` - Upload progress
 

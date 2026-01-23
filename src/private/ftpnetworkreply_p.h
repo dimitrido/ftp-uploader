@@ -1,7 +1,7 @@
-#ifndef QFTPNETWORKREPLY_P_H
-#define QFTPNETWORKREPLY_P_H
+#ifndef FtpNetworkReply_P_H
+#define FtpNetworkReply_P_H
 
-#include "QFtpClient/qftpnetworkreply.h"
+#include "FtpClient/ftpnetworkreply.h"
 #include <QUrl>
 #include <QByteArray>
 #include <QThread>
@@ -9,12 +9,12 @@
 #include <QAtomicInt>
 #include <curl/curl.h>
 
-class QFtpNetworkReplyPrivate
+class FtpNetworkReplyPrivate
 {
 public:
     QUrl url;
-    QFtpNetworkReply::Operation operation;
-    QFtpNetworkReply::NetworkError errorCode;
+    FtpNetworkReply::Operation operation;
+    FtpNetworkReply::NetworkError errorCode;
     QString errorString;
     bool finished;
     QAtomicInt running;
@@ -26,9 +26,9 @@ public:
     QThread *workerThread;
     bool verifySslCertificate;
     
-    QFtpNetworkReplyPrivate()
-        : operation(QFtpNetworkReply::GetOperation),
-          errorCode(QFtpNetworkReply::NoError),
+    FtpNetworkReplyPrivate()
+        : operation(FtpNetworkReply::GetOperation),
+          errorCode(FtpNetworkReply::NoError),
           finished(false),
           running(0),
           sourceData(nullptr),
@@ -38,7 +38,7 @@ public:
     {
     }
     
-    ~QFtpNetworkReplyPrivate()
+    ~FtpNetworkReplyPrivate()
     {
         // Ensure any running operation is stopped before cleanup
         if (running.loadRelaxed() != 0) {
@@ -80,7 +80,7 @@ public:
     static int progressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow,
                                curl_off_t ultotal, curl_off_t ulnow)
     {
-        QFtpNetworkReply *reply = static_cast<QFtpNetworkReply*>(clientp);
+        FtpNetworkReply *reply = static_cast<FtpNetworkReply*>(clientp);
         if (reply) {
             // Check if operation was aborted
             if (reply->d_ptr && !reply->d_ptr->running.loadRelaxed()) {
@@ -100,4 +100,4 @@ public:
     }
 };
 
-#endif // QFTPNETWORKREPLY_P_H
+#endif // FtpNetworkReply_P_H
